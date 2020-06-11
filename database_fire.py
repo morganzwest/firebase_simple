@@ -1,40 +1,40 @@
 import firebase_admin
-from firebase_admin import credentials, db
-import hashlib, uuid
 
-class database(object):
+
+class Db(object):
     def __init__(self, url: str, key_path: str):
-        self.hashed_password = ''  # Default
-        self.old = ''
-        self.new_pass = ''
-        self.url = url
-
-        # get the authorization key
+        from firebase_admin import credentials
         cred = credentials.Certificate(key_path)
         firebase_admin.initialize_app(cred, {
-
-            "databaseURL": self.url
-
+            "databaseURL": url
         })
 
-
-    def hash_password(self, password: str):
-        salt = self.uuid.uuid4().hex  # hex:bin represent
-        # encode it to hashed hex
-        return self.hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
-
-    def check_password(self, hashed_password: str, user_password: str):
+    @staticmethod
+    def check_password(hashed_password: str, user_password: str):
+        import hashlib
         # splits the salt so the decrypt can find the original
         password, salt = hashed_password.split(':')
-        return password == self.hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
+        return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
 
-    def save(self, ref: str, dict_output, ret = False):
-        self.current_db_ref = db.reference(ref)
-        _t = self.current_db_ref.push(dict_output)
+    @staticmethod
+    def hash_password(password: str):
+        import hashlib, uuid
+        salt = uuid.uuid4().hex  # hex:bin represent
+        # encode it to hashed hex
+        return hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
 
-    def load(self, path = "/"):
+    @staticmethod
+    def save(ref: str, dict_output):
+        from firebase_admin import db
+        _t = db.reference(ref).push(dict_output)
+
+    @staticmethod
+    def load(path="/"):
+        from firebase_admin import db
         return db.reference(path)
 
-    def update(self, path: str, dict_update):
+    @staticmethod
+    def update(path: str, dict_update):
+        from firebase_admin import db
         ref = db.reference(path)
         ref.update(dict_update)
